@@ -21,7 +21,7 @@ metadata:
     tier: test
   name: loadgenerator
 spec:
-  replicas: 1
+  replicas: 6
   selector:
     matchLabels:
       app: loadgenerator
@@ -43,7 +43,7 @@ spec:
         - name: FRONTEND_ADDR
           value: frontend:80
         - name: USERS
-          value: "5"
+          value: "20"
         - name: LOG_LEVEL
           value: error
         image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/loadgenerator:v0.6.1@sha256:3bb01473ed1b71b97e0a9c77f1e16db2f8e281344add5fb53d2bb2d889158f46

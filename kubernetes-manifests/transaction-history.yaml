@@ -44,6 +44,7 @@ metadata:
     tier: backend
   name: transactionhistory
 spec:
+  replicas: 2
   selector:
     matchLabels:
       app: transactionhistory
