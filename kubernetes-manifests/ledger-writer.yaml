@@ -63,6 +63,16 @@ spec:
         team: ledger
         tier: backend
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - ledgerwriter
+            topologyKey: "kubernetes.io/hostname"
       containers:
       - env:
         - name: VERSION

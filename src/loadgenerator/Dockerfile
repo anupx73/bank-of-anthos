@@ -39,8 +39,6 @@ ENV GEVENT_SUPPORT=True
 
 # explicitly set a fallback log level in case no log level is defined by Kubernetes
 ENV LOG_LEVEL info
-ENV FRONTEND_ADDR 35.205.61.65
-ENV USERS 15
 
 # start loadgenerator
 ENTRYPOINT locust --host="http://${FRONTEND_ADDR}" --loglevel $LOG_LEVEL --headless --users="${USERS:-10}" 2>&1

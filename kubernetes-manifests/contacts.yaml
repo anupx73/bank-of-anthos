@@ -63,6 +63,16 @@ spec:
         team: accounts
         tier: backend
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - contacts
+            topologyKey: "kubernetes.io/hostname"
       containers:
       - env:
         - name: VERSION
