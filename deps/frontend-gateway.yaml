@@ -18,7 +18,8 @@ metadata:
   name: frontend-gateway
 spec:
   selector:
-    istio: ingress # use Istio default gateway implementation; with helm installation of istio gateway this label has to be changed to 'ingress' from 'ingressgateway'
+    #istio: ingress # use this when using helm install
+    istio: ingressgateway # use this Istio default gateway implementation
   servers:
   - port:
       number: 80
