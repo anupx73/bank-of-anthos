@@ -18,19 +18,19 @@ metadata:
   labels:
     application: bank-of-anthos
     environment: development
-    team: ledger
+    team: accounts
     tier: backend
-  name: ledgerwriter
+  name: userservice
 spec:
   ports:
   - name: http
     port: 8080
     targetPort: 8080
   selector:
-    app: ledgerwriter
+    app: userservice
     application: bank-of-anthos
     environment: development
-    team: ledger
+    team: accounts
     tier: backend
   type: ClusterIP
 ---
@@ -40,27 +40,27 @@ metadata:
   labels:
     application: bank-of-anthos
     environment: development
-    team: ledger
+    team: accounts
     tier: backend
-  name: ledgerwriter
+  name: userservice
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: ledgerwriter
+      app: userservice
       application: bank-of-anthos
       environment: development
-      team: ledger
+      team: accounts
       tier: backend
   template:
     metadata:
       annotations:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
       labels:
-        app: ledgerwriter
+        app: userservice
         application: bank-of-anthos
         environment: development
-        team: ledger
+        team: accounts
         tier: backend
     spec:
       affinity:
@@ -71,7 +71,7 @@ spec:
               - key: app
                 operator: In
                 values:
-                - ledgerwriter
+                - userservice
             topologyKey: "kubernetes.io/hostname"
       containers:
       - env:
@@ -81,42 +81,38 @@ spec:
           value: "8080"
         - name: ENABLE_TRACING
           value: "true"
-        - name: ENABLE_METRICS
-          value: "true"
-        - name: JVM_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Xms256m -Xmx512m
+        - name: TOKEN_EXPIRY_SECONDS
+          value: "3600"
+        - name: PRIV_KEY_PATH
+          value: /tmp/.ssh/privatekey
         - name: LOG_LEVEL
           value: info
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
         envFrom:
         - configMapRef:
             name: environment-config
         - configMapRef:
-            name: service-api-config
-        - configMapRef:
-            name: ledger-db-config
-        image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/ledgerwriter:v0.6.1@sha256:5087bc9f032dee70fda80063d659c3e1e34c7058c8b650d2128a8bdbbd4e5f4d
-        name: ledgerwriter
+            name: accounts-db-config
+        image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/userservice:v0.6.1@sha256:b73e5b03c077ff1e7214885b986f6e9ecb444f78d206c4d3864265449c71b19b
+        name: userservice
+        ports:
+        - containerPort: 8080
+          name: http-server
         readinessProbe:
           httpGet:
             path: /ready
             port: 8080
-          initialDelaySeconds: 60
+          initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 10
         resources:
           limits:
             cpu: 500m
-            ephemeral-storage: 0.5Gi
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            ephemeral-storage: 0.5Gi
+            ephemeral-storage: 0.25Gi
             memory: 256Mi
+          requests:
+            cpu: 260m
+            ephemeral-storage: 0.25Gi
+            memory: 128Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -124,17 +120,11 @@ spec:
             - all
           privileged: false
           readOnlyRootFilesystem: true
-        startupProbe:
-          failureThreshold: 30
-          httpGet:
-            path: /ready
-            port: 8080
-          periodSeconds: 10
         volumeMounts:
         - mountPath: /tmp
           name: tmp
         - mountPath: /tmp/.ssh
-          name: publickey
+          name: keys
           readOnly: true
       securityContext:
         fsGroup: 1000
@@ -146,9 +136,11 @@ spec:
       volumes:
       - emptyDir: {}
         name: tmp
-      - name: publickey
+      - name: keys
         secret:
           items:
+          - key: jwtRS256.key
+            path: privatekey
           - key: jwtRS256.key.pub
             path: publickey
           secretName: jwt-key

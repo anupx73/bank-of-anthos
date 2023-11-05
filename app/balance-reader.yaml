@@ -44,7 +44,7 @@ metadata:
     tier: backend
   name: balancereader
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: balancereader

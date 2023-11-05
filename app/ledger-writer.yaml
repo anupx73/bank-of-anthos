@@ -18,20 +18,20 @@ metadata:
   labels:
     application: bank-of-anthos
     environment: development
-    team: frontend
-    tier: web
-  name: frontend
+    team: ledger
+    tier: backend
+  name: ledgerwriter
 spec:
   ports:
   - name: http
-    port: 80
+    port: 8080
     targetPort: 8080
   selector:
-    app: frontend
+    app: ledgerwriter
     application: bank-of-anthos
     environment: development
-    team: frontend
-    tier: web
+    team: ledger
+    tier: backend
   type: ClusterIP
 ---
 apiVersion: apps/v1
@@ -40,28 +40,28 @@ metadata:
   labels:
     application: bank-of-anthos
     environment: development
-    team: frontend
-    tier: web
-  name: frontend
+    team: ledger
+    tier: backend
+  name: ledgerwriter
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: ledgerwriter
       application: bank-of-anthos
       environment: development
-      team: frontend
-      tier: web
+      team: ledger
+      tier: backend
   template:
     metadata:
       annotations:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
       labels:
-        app: frontend
+        app: ledgerwriter
         application: bank-of-anthos
         environment: development
-        team: frontend
-        tier: web
+        team: ledger
+        tier: backend
     spec:
       affinity:
         podAntiAffinity:
@@ -71,7 +71,7 @@ spec:
               - key: app
                 operator: In
                 values:
-                - frontend
+                - ledgerwriter
             topologyKey: "kubernetes.io/hostname"
       containers:
       - env:
@@ -81,60 +81,42 @@ spec:
           value: "8080"
         - name: ENABLE_TRACING
           value: "true"
-        - name: SCHEME
-          value: http
+        - name: ENABLE_METRICS
+          value: "true"
+        - name: JVM_OPTS
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+            -Xms256m -Xmx512m
         - name: LOG_LEVEL
           value: info
-        - name: DEFAULT_USERNAME
+        - name: NAMESPACE
           valueFrom:
-            configMapKeyRef:
-              key: DEMO_LOGIN_USERNAME
-              name: demo-data-config
-        - name: DEFAULT_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              key: DEMO_LOGIN_PASSWORD
-              name: demo-data-config
-        - name: REGISTERED_OAUTH_CLIENT_ID
-          valueFrom:
-            configMapKeyRef:
-              key: DEMO_OAUTH_CLIENT_ID
-              name: oauth-config
-              optional: true
-        - name: ALLOWED_OAUTH_REDIRECT_URI
-          valueFrom:
-            configMapKeyRef:
-              key: DEMO_OAUTH_REDIRECT_URI
-              name: oauth-config
-              optional: true
+            fieldRef:
+              fieldPath: metadata.namespace
         envFrom:
         - configMapRef:
             name: environment-config
         - configMapRef:
             name: service-api-config
-        image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/frontend:v0.6.1@sha256:07cb2c7f9a08cf820a81d59670a59b53d183717ce998a035625f0441b24e7544
-        livenessProbe:
-          httpGet:
-            path: /ready
-            port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 15
-          timeoutSeconds: 30
-        name: front
+        - configMapRef:
+            name: ledger-db-config
+        image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/ledgerwriter:v0.6.1@sha256:5087bc9f032dee70fda80063d659c3e1e34c7058c8b650d2128a8bdbbd4e5f4d
+        name: ledgerwriter
         readinessProbe:
           httpGet:
             path: /ready
             port: 8080
-          initialDelaySeconds: 10
+          initialDelaySeconds: 60
           periodSeconds: 5
           timeoutSeconds: 10
         resources:
           limits:
-            cpu: 250m
-            memory: 128Mi
+            cpu: 500m
+            ephemeral-storage: 0.5Gi
+            memory: 512Mi
           requests:
             cpu: 100m
-            memory: 64Mi
+            ephemeral-storage: 0.5Gi
+            memory: 256Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -142,6 +124,12 @@ spec:
             - all
           privileged: false
           readOnlyRootFilesystem: true
+        startupProbe:
+          failureThreshold: 30
+          httpGet:
+            path: /ready
+            port: 8080
+          periodSeconds: 10
         volumeMounts:
         - mountPath: /tmp
           name: tmp
