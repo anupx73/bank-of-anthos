@@ -44,11 +44,10 @@ module "gke" {
   horizontal_pod_autoscaling           = true
   enable_vertical_pod_autoscaling      = true
   remove_default_node_pool             = true
-  monitoring_enable_managed_prometheus = false
   monitoring_enabled_components        = ["SYSTEM_COMPONENTS", "APISERVER", "CONTROLLER_MANAGER", "SCHEDULER"]
   logging_enabled_components           = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  enable_cost_allocation               = false
   gke_backup_agent_config              = true
+  # config_connector                     = true
 
   node_pools = [
     {
