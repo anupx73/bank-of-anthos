@@ -1,7 +1,7 @@
 #!/bin/zsh
 #
 
-appDeploy() {
+appDeployMultiNS() {
   kubectl apply -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/accounts-db.yaml
   kubectl apply -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/config.yaml -n boa-acc-db-ns
   
@@ -29,7 +29,7 @@ appDeploy() {
   kubectl apply -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/frontend-gateway.yaml
 }
 
-appScale() {
+appScaleMultiNS() {
   kubectl scale statefulsets accounts-db --replicas=$1 -n boa-acc-db-ns &&
   kubectl scale statefulsets ledger-db --replicas=$1 -n boa-ledger-db-ns &&
   kubectl scale deployment/balancereader --replicas=$1 -n boa-balance-ns &&
@@ -40,7 +40,7 @@ appScale() {
   kubectl scale deployment/userservice --replicas=$1 -n boa-user-ns
 }
 
-appDelete() {
+appDeleteMultiNS() {
   kubectl delete -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/accounts-db.yaml
   kubectl delete -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/ledger-db.yaml
   kubectl delete -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/balance-reader.yaml
@@ -52,7 +52,7 @@ appDelete() {
   kubectl delete -f /Users/anupam.saha/anupx73/bank-of-anthos/app-multi-ns/frontend-gateway.yaml
 }
 
-nsDelete() {
+nsDeleteMultiNS() {
   kubectl delete ns boa-user-ns
   kubectl delete ns boa-transaction-ns
   kubectl delete ns boa-ledger-ns

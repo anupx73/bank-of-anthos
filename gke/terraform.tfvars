@@ -12,4 +12,4 @@ machine_type                   = "e2-standard-2"
 min_count                      = 1
 max_count                      = 10
 disk_size_gb                   = 50
-initial_node_count             = 2
+initial_node_count             = 8

@@ -2,10 +2,10 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: unknown-balance
-  namespace: boa
+  namespace: boa-balance-ns
 spec:
   hosts:
-    - balancereader.boa.svc.cluster.local
+    - balancereader.boa-balance-ns.svc.cluster.local
   http:
     - directResponse:
         body:
